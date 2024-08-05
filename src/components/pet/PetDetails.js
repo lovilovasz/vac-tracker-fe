@@ -1,45 +1,77 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { Box, Typography, CircularProgress, Container, List, ListItem, ListItemText, Divider } from '@mui/material';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { Container, Typography, Box, CircularProgress, Tabs, Tab, Divider, Grid, Card, CardContent } from '@mui/material';
+import axios from 'axios';
+import MedicalConditionList from '../medical-history/MedicalConditionList';
+import VaccinationRecordList from '../medical-history/VaccinationRecordList';
+import MedicationRecordList from '../medical-history/MedicationRecordList';
+import AllergyList from '../medical-history/AllergyList';
+import SurgeryList from '../medical-history/SurgeryList';
+import CheckUpList from '../medical-history/CheckUpList';
+import {
+  Pets as PetsIcon,
+  CalendarToday as CalendarTodayIcon,
+  Person as PersonIcon,
+  ColorLens as ColorLensIcon,
+  MonitorWeight as MonitorWeightIcon,
+  ConfirmationNumber as ConfirmationNumberIcon,
+} from '@mui/icons-material';
 
 const PetDetails = () => {
   const { id } = useParams();
   const [pet, setPet] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [tabValue, setTabValue] = useState(0);
+
+  const fetchPetDetails = async () => {
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_HOST}/pets/${id}`, {
+        headers: { Accept: 'application/json' }
+      });
+      setPet(response.data);
+      setLoading(false);
+    } catch (err) {
+      setError(err);
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchPet = async () => {
-      try {
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_HOST}/pets/${id}`, {
-          headers: {
-            Accept: 'application/json'
-          }
-        });
-        setPet(response.data);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching pet details:', error);
-        setLoading(false);
-      }
-    };
-
-    fetchPet();
+    fetchPetDetails();
   }, [id]);
+
+  const handleRecordUpdate = (field) => {
+    fetchPetDetails();
+  };
+
+  const handleTabChange = (event, newValue) => {
+    setTabValue(newValue);
+  };
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+      <Container>
         <CircularProgress />
-      </Box>
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container>
+        <Typography variant="h6" color="error">
+          Error fetching pet details: {error.message}
+        </Typography>
+      </Container>
     );
   }
 
   if (!pet) {
     return (
       <Container>
-        <Typography variant="h4" gutterBottom>
-          Pet not found
+        <Typography variant="h6">
+          Pet not found.
         </Typography>
       </Container>
     );
@@ -48,123 +80,103 @@ const PetDetails = () => {
   return (
     <Container>
       <Typography variant="h4" gutterBottom>
-        {pet.name}
-      </Typography>
-      <List>
-        <ListItem>
-          <ListItemText primary="Species" secondary={pet.species} />
-        </ListItem>
-        <ListItem>
-          <ListItemText primary="Breed" secondary={pet.breed} />
-        </ListItem>
-        <ListItem>
-          <ListItemText primary="Gender" secondary={pet.gender} />
-        </ListItem>
-        <ListItem>
-          <ListItemText primary="Weight" secondary={`${pet.weight} kg`} />
-        </ListItem>
-        <ListItem>
-          <ListItemText primary="Color" secondary={pet.color} />
-        </ListItem>
-        <ListItem>
-          <ListItemText primary="Microchip Number" secondary={pet.microchipNumber} />
-        </ListItem>
-        <ListItem>
-          <ListItemText primary="Date of Birth" secondary={new Date(pet.dateOfBirth).toLocaleDateString()} />
-        </ListItem>
-      </List>
-
-      <Divider sx={{ marginY: 2 }} />
-
-      <Typography variant="h5" gutterBottom>
-        Medical History
+        {pet.name}'s Details
       </Typography>
 
-      <Typography variant="h6" gutterBottom>
-        Medical Conditions
-      </Typography>
-      <List>
-        {pet.medicalHistory.medicalConditions.map((condition) => (
-          <ListItem key={condition.id}>
-            <ListItemText
-              primary={condition.conditionName}
-              secondary={`Diagnosis Date: ${new Date(condition.diagnosisDate).toLocaleDateString()} | Treatment: ${condition.treatment} | Status: ${condition.status}`}
-            />
-          </ListItem>
-        ))}
-      </List>
+      <Card sx={{ mb: 2 }}>
+        <CardContent>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6} md={4}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <PetsIcon sx={{ mr: 1 }} />
+                <Typography variant="h6"><strong>Species:</strong> {pet.species}</Typography>
+              </Box>
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <ColorLensIcon sx={{ mr: 1 }} />
+                <Typography variant="h6"><strong>Color:</strong> {pet.color}</Typography>
+              </Box>
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <MonitorWeightIcon sx={{ mr: 1 }} />
+                <Typography variant="h6"><strong>Weight:</strong> {pet.weight} kg</Typography>
+              </Box>
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <PersonIcon sx={{ mr: 1 }} />
+                <Typography variant="h6"><strong>Owner:</strong> {pet.owner}</Typography>
+              </Box>
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <ConfirmationNumberIcon sx={{ mr: 1 }} />
+                <Typography variant="h6"><strong>Microchip Number:</strong> {pet.microchipNumber}</Typography>
+              </Box>
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <CalendarTodayIcon sx={{ mr: 1 }} />
+                <Typography variant="h6"><strong>Date of Birth:</strong> {new Date(pet.dateOfBirth).toLocaleDateString()}</Typography>
+              </Box>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
 
-      <Typography variant="h6" gutterBottom>
-        Vaccination Records
-      </Typography>
-      <List>
-        {pet.medicalHistory.vaccinationRecords.map((record) => (
-          <ListItem key={record.id}>
-            <ListItemText
-              primary={record.vaccineName}
-              secondary={`Vaccination Date: ${new Date(record.vaccinationDate).toLocaleDateString()} | Expiration Date: ${new Date(record.expirationDate).toLocaleDateString()} | Administered By: ${record.administeredBy}`}
-            />
-          </ListItem>
-        ))}
-      </List>
+      <Divider sx={{ mb: 2 }} />
 
-      <Typography variant="h6" gutterBottom>
-        Medication Records
-      </Typography>
-      <List>
-        {pet.medicalHistory.medicationRecords.map((record) => (
-          <ListItem key={record.id}>
-            <ListItemText
-              primary={record.medicationName}
-              secondary={`Dosage: ${record.dosage} | Start Date: ${new Date(record.startDate).toLocaleDateString()} | End Date: ${new Date(record.endDate).toLocaleDateString()} | Instructions: ${record.instructions}`}
-            />
-          </ListItem>
-        ))}
-      </List>
+      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+        <Tabs value={tabValue} onChange={handleTabChange} aria-label="medical history tabs" variant="scrollable" scrollButtons="auto">
+          <Tab label="Medical Conditions" />
+          <Tab label="Vaccinations" />
+          <Tab label="Medications" />
+          <Tab label="Allergies" />
+          <Tab label="Surgeries" />
+          <Tab label="Check-Ups" />
+        </Tabs>
+      </Box>
 
-      <Typography variant="h6" gutterBottom>
-        Allergies
-      </Typography>
-      <List>
-        {pet.medicalHistory.allergies.map((allergy) => (
-          <ListItem key={allergy.id}>
-            <ListItemText
-              primary={allergy.allergen}
-              secondary={`Reaction: ${allergy.reaction} | Date Identified: ${new Date(allergy.dateIdentified).toLocaleDateString()}`}
-            />
-          </ListItem>
-        ))}
-      </List>
-
-      <Typography variant="h6" gutterBottom>
-        Surgeries
-      </Typography>
-      <List>
-        {pet.medicalHistory.surgeries.map((surgery) => (
-          <ListItem key={surgery.id}>
-            <ListItemText
-              primary={surgery.surgeryType}
-              secondary={`Surgery Date: ${new Date(surgery.surgeryDate).toLocaleDateString()} | Outcome: ${surgery.outcome}`}
-            />
-          </ListItem>
-        ))}
-      </List>
-
-      <Typography variant="h6" gutterBottom>
-        Check-Ups
-      </Typography>
-      <List>
-        {pet.medicalHistory.checkUps.map((checkUp) => (
-          <ListItem key={checkUp.id}>
-            <ListItemText
-              primary={`Visit Date: ${new Date(checkUp.visitDate).toLocaleDateString()}`}
-              secondary={`Veterinarian: ${checkUp.veterinarian} | Notes: ${checkUp.notes}`}
-            />
-          </ListItem>
-        ))}
-      </List>
+      {tabValue === 0 && (
+        <TabContent>
+          <MedicalConditionList petId={pet.id} records={pet.medicalHistory.medicalConditions} onRecordUpdate={() => handleRecordUpdate('medicalConditions')} />
+        </TabContent>
+      )}
+      {tabValue === 1 && (
+        <TabContent>
+          <VaccinationRecordList petId={pet.id} records={pet.medicalHistory.vaccinationRecords} onRecordUpdate={() => handleRecordUpdate('vaccinationRecords')} />
+        </TabContent>
+      )}
+      {tabValue === 2 && (
+        <TabContent>
+          <MedicationRecordList petId={pet.id} records={pet.medicalHistory.medicationRecords} onRecordUpdate={() => handleRecordUpdate('medicationRecords')} />
+        </TabContent>
+      )}
+      {tabValue === 3 && (
+        <TabContent>
+          <AllergyList petId={pet.id} records={pet.medicalHistory.allergies} onRecordUpdate={() => handleRecordUpdate('allergies')} />
+        </TabContent>
+      )}
+      {tabValue === 4 && (
+        <TabContent>
+          <SurgeryList petId={pet.id} records={pet.medicalHistory.surgeries} onRecordUpdate={() => handleRecordUpdate('surgeries')} />
+        </TabContent>
+      )}
+      {tabValue === 5 && (
+        <TabContent>
+          <CheckUpList petId={pet.id} records={pet.medicalHistory.checkUps} onRecordUpdate={() => handleRecordUpdate('checkUps')} />
+        </TabContent>
+      )}
     </Container>
   );
 };
+
+const TabContent = ({ children }) => (
+  <Box sx={{ p: 2 }}>
+    {children}
+  </Box>
+);
 
 export default PetDetails;
