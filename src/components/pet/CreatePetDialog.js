@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, MenuItem, Select, FormControl, InputLabel, FormHelperText } from '@mui/material';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import ImportHorseDialog from './ImportHorseDialog'; // Import the new component
+import ImportHorseDialog from './ImportHorseDialog';
+import { useAuth0 } from '@auth0/auth0-react';
 
 const CreatePetDialog = ({ open, onClose, owner, onPetCreated }) => {
   const initialPetState = {
@@ -21,6 +22,7 @@ const CreatePetDialog = ({ open, onClose, owner, onPetCreated }) => {
   const [errors, setErrors] = useState({});
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const navigate = useNavigate();
+  const { getAccessTokenSilently } = useAuth0();
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -44,9 +46,11 @@ const CreatePetDialog = ({ open, onClose, owner, onPetCreated }) => {
     }
 
     try {
+      const token = await getAccessTokenSilently();
       const response = await axios.post(`${process.env.REACT_APP_BACKEND_HOST}/pets`, newPet, {
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
         }
       });
       onPetCreated(); // Call the callback to refresh the pet list

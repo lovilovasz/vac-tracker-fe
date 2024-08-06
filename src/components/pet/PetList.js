@@ -22,7 +22,9 @@ import {
 import { useNavigate } from 'react-router-dom';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
-import CreatePetDialog from './CreatePetDialog'; // Import the CreatePetDialog component
+import CreatePetDialog from './CreatePetDialog';
+import { useAuth0 } from '@auth0/auth0-react';
+
 
 const PetList = ({ owner }) => {
   const [pets, setPets] = useState([]);
@@ -31,12 +33,15 @@ const PetList = ({ owner }) => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedPet, setSelectedPet] = useState(null);
   const navigate = useNavigate();
+  const { getAccessTokenSilently } = useAuth0();
 
   const fetchPets = async () => {
     try {
+      const token = await getAccessTokenSilently();
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_HOST}/pets/owner/${owner}`, {
         headers: {
-          Accept: 'application/json'
+          Accept: 'application/json',
+          Authorization: `Bearer ${token}`
         }
       });
       setPets(response.data);
