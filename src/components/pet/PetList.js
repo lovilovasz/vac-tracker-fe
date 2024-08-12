@@ -69,7 +69,12 @@ const PetList = ({ owner }) => {
 
   const handleDeleteConfirm = async () => {
     try {
-      await axios.delete(`${process.env.REACT_APP_BACKEND_HOST}/pets/${selectedPet.id}`);
+      const token = await getAccessTokenSilently();
+      await axios.delete(`${process.env.REACT_APP_BACKEND_HOST}/pets/${selectedPet.id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       setPets(pets.filter((pet) => pet.id !== selectedPet.id));
       handleDialogClose();
     } catch (error) {

@@ -5,12 +5,14 @@ import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import PersonIcon from '@mui/icons-material/Person';
 import NoteIcon from '@mui/icons-material/Note';
 import axios from 'axios';
+import { useAuth0 } from '@auth0/auth0-react';
 
 const CheckUpList = ({ petId, records, onRecordUpdate }) => {
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [newCheckUp, setNewCheckUp] = useState({ visitDate: '', veterinarian: '', notes: '' });
+  const { getAccessTokenSilently } = useAuth0();
 
   const handleRecordClick = (record) => {
     setSelectedRecord(record);
@@ -25,8 +27,10 @@ const CheckUpList = ({ petId, records, onRecordUpdate }) => {
 
   const handleDelete = async (id) => {
     try {
+      const token = await getAccessTokenSilently();
       await axios.delete(`${process.env.REACT_APP_BACKEND_HOST}/medical/history/checkUps/${id}`, {
-        headers: { Accept: 'application/json' }
+        headers: { Accept: 'application/json',
+          Authorization: `Bearer ${token}` }
       });
       onRecordUpdate('checkUps'); // Notify parent to update the record list
       handleClose();
@@ -46,8 +50,10 @@ const CheckUpList = ({ petId, records, onRecordUpdate }) => {
 
   const handleCreate = async () => {
     try {
+      const token = await getAccessTokenSilently();
       await axios.post(`${process.env.REACT_APP_BACKEND_HOST}/medical/history/${petId}/checkUps`, newCheckUp, {
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}` }
       });
       onRecordUpdate('checkUps'); // Notify parent to update the record list
       handleClose();
