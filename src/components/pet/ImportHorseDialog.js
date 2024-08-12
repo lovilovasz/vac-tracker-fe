@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, List, ListItem, ListItemText, CircularProgress, Grid } from '@mui/material';
 import axios from 'axios';
-import { format } from 'date-fns'; // For date formatting
+import { format } from 'date-fns';
+import { useAuth0 } from '@auth0/auth0-react';
+
 
 const ImportHorseDialog = ({ open, onClose, onHorseSelected }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   const [horses, setHorses] = useState([]);
+  const { getAccessTokenSilently } = useAuth0();
+
 
   // Effect to clear horses list when dialog is closed
   useEffect(() => {
@@ -19,7 +23,13 @@ const ImportHorseDialog = ({ open, onClose, onHorseSelected }) => {
   const handleSearch = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`http://localhost:8080/horseSearch/${searchTerm}`);
+      const token = await getAccessTokenSilently();
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_HOST}/horseSearch/${searchTerm}`, {
+        headers: {
+          Accept: 'application/json',
+          Authorization: `Bearer ${token}`
+        }
+      });
       setHorses(response.data.rows);
       setSearchTerm(''); // Clear search term after search
     } catch (error) {

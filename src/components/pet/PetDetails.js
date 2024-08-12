@@ -16,6 +16,8 @@ import {
   MonitorWeight as MonitorWeightIcon,
   ConfirmationNumber as ConfirmationNumberIcon,
 } from '@mui/icons-material';
+import { useAuth0 } from '@auth0/auth0-react';
+
 
 const PetDetails = () => {
   const { id } = useParams();
@@ -23,11 +25,18 @@ const PetDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [tabValue, setTabValue] = useState(0);
+  const { getAccessTokenSilently } = useAuth0();
+
 
   const fetchPetDetails = async () => {
     try {
+      const token = await getAccessTokenSilently();
+
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_HOST}/pets/${id}`, {
-        headers: { Accept: 'application/json' }
+        headers: { 
+          Accept: 'application/json',
+          Authorization: `Bearer ${token}`
+         }
       });
       setPet(response.data);
       setLoading(false);

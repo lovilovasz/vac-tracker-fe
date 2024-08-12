@@ -1,11 +1,16 @@
+// src/components/Navbar.js
 import React, { useState } from 'react';
 import { AppBar, Toolbar, Typography, Button, IconButton, Box, Drawer, List, ListItem, ListItemText } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import PetsIcon from '@mui/icons-material/Pets';
 import { Link } from 'react-router-dom';
+import { useAuth0 } from '@auth0/auth0-react';
+import LoginButton from './auth/LoginButton';
+import LogoutButton from './auth/LogoutButton';
 
 const Navbar = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const { isAuthenticated } = useAuth0();
 
   const toggleDrawer = (open) => (event) => {
     if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
@@ -32,6 +37,9 @@ const Navbar = () => {
               Pets
             </Button>
           </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            {isAuthenticated ? <LogoutButton /> : <LoginButton />}
+          </Box>
           <IconButton
             edge="end"
             color="inherit"
@@ -57,6 +65,9 @@ const Navbar = () => {
             </ListItem>
             <ListItem button component={Link} to="/pets">
               <ListItemText primary="Pets" />
+            </ListItem>
+            <ListItem>
+              {isAuthenticated ? <LogoutButton /> : <LoginButton />}
             </ListItem>
           </List>
         </Box>

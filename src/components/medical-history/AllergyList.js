@@ -5,12 +5,14 @@ import AllergyIcon from '@mui/icons-material/BugReport';
 import ReactionIcon from '@mui/icons-material/Warning';
 import DateIcon from '@mui/icons-material/CalendarToday';
 import axios from 'axios';
+import { useAuth0 } from '@auth0/auth0-react';
 
 const AllergyList = ({ petId, records, onRecordUpdate }) => {
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [newAllergy, setNewAllergy] = useState({ allergen: '', reaction: '', dateIdentified: '' });
+  const { getAccessTokenSilently } = useAuth0();
 
   const handleRecordClick = (record) => {
     setSelectedRecord(record);
@@ -24,8 +26,10 @@ const AllergyList = ({ petId, records, onRecordUpdate }) => {
 
   const handleDelete = async (id) => {
     try {
+      const token = await getAccessTokenSilently();
       await axios.delete(`${process.env.REACT_APP_BACKEND_HOST}/medical/history/allergies/${id}`, {
-        headers: { Accept: 'application/json' }
+        headers: { Accept: 'application/json',
+          Authorization: `Bearer ${token}` }
       });
       onRecordUpdate('allergies'); // Notify parent to update the record list
       handleClose();
@@ -45,8 +49,12 @@ const AllergyList = ({ petId, records, onRecordUpdate }) => {
 
   const handleCreate = async () => {
     try {
+      const token = await getAccessTokenSilently();
       await axios.post(`${process.env.REACT_APP_BACKEND_HOST}/medical/history/${petId}/allergies`, newAllergy, {
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+         }
       });
       onRecordUpdate('allergies'); // Notify parent to update the record list
       handleClose();
