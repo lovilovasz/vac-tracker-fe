@@ -4,34 +4,42 @@ import axios from 'axios';
 import { format } from 'date-fns';
 import { useAuth0 } from '@auth0/auth0-react';
 
-
 const ImportHorseDialog = ({ open, onClose, onHorseSelected }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [birthYear, setBirthYear] = useState(''); // New state for birth year
   const [loading, setLoading] = useState(false);
   const [horses, setHorses] = useState([]);
   const { getAccessTokenSilently } = useAuth0();
-
 
   // Effect to clear horses list when dialog is closed
   useEffect(() => {
     if (!open) {
       setHorses([]);
       setSearchTerm(''); // Clear search term when closing dialog
+      setBirthYear(''); // Clear birth year when closing dialog
     }
   }, [open]);
 
   const handleSearch = async () => {
+    if (!searchTerm) {
+      alert('Please enter at least horse name.');
+      return;
+    }
+
     setLoading(true);
     try {
       const token = await getAccessTokenSilently();
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_HOST}/horseSearch/${searchTerm}`, {
+      const response = await axios.post(`${process.env.REACT_APP_BACKEND_HOST}/horseSearch`, 
+        { nev: searchTerm, szuletesiEv: birthYear}
+        ,{
         headers: {
           Accept: 'application/json',
           Authorization: `Bearer ${token}`
         }
       });
-      setHorses(response.data.rows);
+      setHorses(response.data.horses); // Adjust according to the new response structure
       setSearchTerm(''); // Clear search term after search
+      setBirthYear(''); // Clear birth year after search
     } catch (error) {
       console.error('Error fetching horse data:', error);
     }
@@ -47,10 +55,9 @@ const ImportHorseDialog = ({ open, onClose, onHorseSelected }) => {
   };
 
   // Format the date to a more readable format
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return format(date, 'yyyy-MM-dd'); // Adjust format as needed
+  const formatDate = (year, month, day) => {
+    if (!year || !month || !day) return '';
+    return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
   };
 
   return (
@@ -58,7 +65,7 @@ const ImportHorseDialog = ({ open, onClose, onHorseSelected }) => {
       <DialogTitle>Import Horse</DialogTitle>
       <DialogContent>
         <Grid container spacing={2} alignItems="center">
-          <Grid item xs={9}>
+          <Grid item xs={6}>
             <TextField
               autoFocus
               margin="dense"
@@ -71,12 +78,23 @@ const ImportHorseDialog = ({ open, onClose, onHorseSelected }) => {
             />
           </Grid>
           <Grid item xs={3}>
+            <TextField
+              margin="dense"
+              name="birthYear"
+              label="Birth Year"
+              type="number"
+              fullWidth
+              value={birthYear}
+              onChange={(e) => setBirthYear(e.target.value)}
+            />
+          </Grid>
+          <Grid item xs={3}>
             <Button 
               onClick={handleSearch} 
               color="primary"
               fullWidth
               variant="contained"
-              style={{ marginTop: '8px' }} // Adjust the margin to align with the TextField
+              style={{ marginTop: '8px' }}
             >
               Search
             </Button>
@@ -85,10 +103,10 @@ const ImportHorseDialog = ({ open, onClose, onHorseSelected }) => {
         {loading && <CircularProgress />}
         <List>
           {horses.map((horse) => (
-            <ListItem button key={horse.Id} onClick={() => handleSelectHorse(horse)}>
+            <ListItem button key={horse.loId} onClick={() => handleSelectHorse(horse)}>
               <ListItemText
-                primary={horse.Name}
-                secondary={`DOB: ${formatDate(horse.BirthDate)}, Owner: ${horse.Owner}`}
+                primary={horse.nev}
+                secondary={`DOB: ${formatDate(horse.szuletesiEv, horse.szuletesiHo, horse.szuletesiNap)}, Owner: ${horse.tenyesztoNev}`}
               />
             </ListItem>
           ))}

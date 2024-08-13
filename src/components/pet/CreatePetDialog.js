@@ -8,7 +8,7 @@ import { useAuth0 } from '@auth0/auth0-react';
 const CreatePetDialog = ({ open, onClose, owner, onPetCreated }) => {
   const initialPetState = {
     name: '',
-    species: '', // Leave species empty initially
+    species: '',
     breed: '',
     gender: '',
     weight: '',
@@ -34,7 +34,6 @@ const CreatePetDialog = ({ open, onClose, owner, onPetCreated }) => {
     if (!newPet.name) errors.name = 'Name is required';
     if (!newPet.species) errors.species = 'Species is required';
     if (!newPet.gender) errors.gender = 'Gender is required';
-    if (newPet.gender && !['Male', 'Female'].includes(newPet.gender)) errors.gender = 'Gender must be either Male or Female';
     return errors;
   };
 
@@ -63,16 +62,16 @@ const CreatePetDialog = ({ open, onClose, owner, onPetCreated }) => {
   };
 
   const handleHorseSelected = (horse) => {
-    const formattedDateOfBirth = horse.BirthDate ? horse.BirthDate.split('T')[0] : ''; // Format the date as yyyy-MM-dd
+    const formattedDateOfBirth = `${horse.szuletesiEv}-${String(horse.szuletesiHo).padStart(2, '0')}-${String(horse.szuletesiNap).padStart(2, '0')}`; // Format the date as yyyy-MM-dd
 
     setNewPet({
       ...newPet,
-      name: horse.Name,
+      name: horse.nev,
       species: 'Horse', // Set species to "Horse" when importing
-      breed: horse.BreedName,
-      gender: horse.Sex === 'Kanca' ? 'Female' : horse.Sex === 'Mén' ? 'Male' : '',
-      color: horse.Color,
-      microchipNumber: horse.Chip,
+      breed: horse.fajtaHu,
+      gender: horse.nemHu,
+      color: horse.szinHu,
+      microchipNumber: horse.mikrochip,
       dateOfBirth: formattedDateOfBirth,
     });
 
@@ -94,7 +93,7 @@ const CreatePetDialog = ({ open, onClose, owner, onPetCreated }) => {
       <Dialog open={open} onClose={handleCloseDialog}>
         <DialogTitle>Create Pet</DialogTitle>
         <DialogContent>
-          <Button onClick={() => setImportDialogOpen(true)}>Import from dijugratas.hu</Button>
+          <Button onClick={() => setImportDialogOpen(true)}>Import from MLOSZ</Button>
           <TextField
             autoFocus
             margin="dense"
@@ -130,18 +129,16 @@ const CreatePetDialog = ({ open, onClose, owner, onPetCreated }) => {
             value={newPet.breed}
             onChange={handleInputChange}
           />
-          <FormControl fullWidth margin="dense" variant="standard" error={!!errors.gender}>
-            <InputLabel>Gender</InputLabel>
-            <Select
-              name="gender"
-              value={newPet.gender}
-              onChange={handleInputChange}
-            >
-              <MenuItem value="Male">Male</MenuItem>
-              <MenuItem value="Female">Female</MenuItem>
-            </Select>
-            {errors.gender && <FormHelperText>{errors.gender}</FormHelperText>}
-          </FormControl>
+          <TextField
+            margin="dense"
+            name="gender"
+            label="Gender"
+            type="text"
+            fullWidth
+            variant="standard"
+            value={newPet.gender}
+            onChange={handleInputChange}
+          />
           <TextField
             margin="dense"
             name="weight"
